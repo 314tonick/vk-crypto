@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>VK Crypto</title>
+    <style>
+        body {
+            width: max-content;
+            height: max-content;
+            padding: 3px;
+            font-size: 20px;
+            background-color: rgb(22, 22, 120);
+            font-family: 'Franklin Gothic Medium', 'Arial Narrow', Arial, sans-serif;
+        }
+
+        textarea {
+            width: 90%;
+            box-sizing: border-box;
+        }
+
+        div, label {
+            color: rgb(255, 233, 188);
+        }
+
+        button {
+            font-family: 'Franklin Gothic Medium', 'Arial Narrow', Arial, sans-serif;
+            color: rgb(255, 233, 188);
+            background-color: rgb(10, 10, 53);
+        }
+        
+    </style>
+</head>
+<body>
+    <div style="font-size: 25px; font-weight: bold;"> VK Crypto </div>
+    <div style="font-size: 10px; font-weight: bold;"> Версия 0.0 </div>
+    <div style="font-size: 15px;"><a target="_blank" href="https://github.com/">by UNKNOWN</a></div>
+    <hr>
+    <label>
+        Да?
+        <input id="field1_checkbox" type="checkbox">
+    </label><br>
+    <div>
+        Ваш текущий публичный RSA ключ:
+        <br>
+        <label id="pub_key_label" title="Его нужно знать всем, чтобы с Вами общаться.">123</label>
+        <button id="pub_key_button" title="Его нужно знать всем, чтобы с Вами общаться."">Скопировать</button>
+        <br>
+        <button id="generate_keys_button">Перегенерировать!</button>
+    </div>
+
+    <script src="popup.js"></script>
+    <script src="generate_keys.js"></script>
+</body>
+</html>
