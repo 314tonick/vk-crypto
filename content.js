@@ -35,6 +35,19 @@ function stableStringify(obj) {
         JSON.stringify(k) + ":" + stableStringify(obj[k])
     ).join(",") + "}";
 }
+
+function getChatId() {
+    const url = document.URL;
+    const reg = /[0123456789]+/;
+    const results = reg.exec(url);
+    if (results == null) return -1;
+    for (let occ of results) {
+        if (parseInt(occ) >= 100) {
+            return parseInt(occ);
+        }
+    }
+    return -1;
+}
 async function encrypt(text, chat_id) {
     const sender_rsa_raw = (await chrome.runtime.sendMessage({action: "get_public_rsa_key"})).result;
     const private_rsa_raw = (await chrome.runtime.sendMessage({action: "get_private_rsa_key"})).result;
@@ -223,12 +236,11 @@ async function send() {
 
     if (!text.trim()) return;
 
-    const link = document.URL;
-    if (!link.startsWith("https://vk.com/im/convo/")) {
-        alert("Ссылка не начинается на https://vk.com/im/convo/.");
+    const chat_id = getChatId();
+    if (chat_id == -1) {
+        alert("Ошибка! Не удалось определить id чата.");
         return;
     }
-    const chat_id = parseInt(link.substring(24));
 
     try {
         const encrypted = packet_to_text(await encrypt(text, chat_id));
@@ -255,11 +267,10 @@ async function send() {
 async function non_decrypted_watcher() {
     try {
         let nodes = document.getElementsByClassName("MessageText");
-        const link = document.URL;
-        if (!link.startsWith("https://vk.com/im/convo/")) {
+        const chat_id = getChatId();
+        if (chat_id == -1) {
             return;
         }
-        const chat_id = parseInt(link.substring(24));
         for (let node of nodes) {
             if (node.classList.contains("decrypted")) {
                 continue;
@@ -284,157 +295,209 @@ async function non_decrypted_watcher() {
     }
 }
 
-async function auto_add_crypto_page() {
-    let nd = document.getElementById("vk-crypto-page-button");
-    if (nd == undefined) {
-        let ins_after = document.getElementsByClassName("ConvoHeader__controls")[0];
-        if (ins_after != undefined) {
-            const style = document.createElement("style");
-            style.textContent = `
-                .vk-crypto-mini-btn {
-                // position: fixed;
-                //bottom: 20px;
-                //right: 20px;
-                z-index: 999999;
-                background: rgb(10, 10, 53);
-                color: rgb(255, 233, 188);
-                border: none;
-                padding: 10px 14px;
-                border-radius: 10px;
-                cursor: pointer;
-                font-size: 15px;
-                font-family: 'Franklin Gothic Medium', 'Arial Narrow', Arial, sans-serif;
-                }
-
-                .vk-crypto-popup {
-                position: fixed;
-                transform: translateY(45px);
-                transition: transform 0.15s ease;
-                // bottom: 70px;
-                //right: 20px;
-                width: 260px;
-                background: rgb(22, 22, 120);
-                color: rgb(255, 233, 188);
-                padding: 12px;
-                border-radius: 12px;
-                z-index: 999999;
-                display: none;
-                box-shadow: 0 10px 30px rgba(0,0,0,0.4);
-                }
-
-                .vk-crypto-popup input {
-                width: 100%;
-                margin-top: 6px;
-                margin-bottom: 10px;
-                padding: 8px;
-                border-radius: 8px;
-                border: none;
-                outline: none;
-                background: rgb(35, 35, 150);
-                color: rgb(255, 233, 188);
-                }
-
-                .vk-crypto-popup button {
-                width: 100%;
-                padding: 8px;
-                border: none;
-                border-radius: 8px;
-                cursor: pointer;
-                background: rgb(10, 10, 53);
-                color: rgb(255, 233, 188);
-                font-family: 'Franklin Gothic Medium', 'Arial Narrow', Arial, sans-serif;
-                }
-
-                .vk-crypto-popup-title {
-                font-size: 22px;
-                margin-bottom: 6px;
-                opacity: 0.9;
-                font-family: 'Franklin Gothic Medium', 'Arial Narrow', Arial, sans-serif;
-                }
-
-                .vk-crypto-popup-label {
-                font-size: 17px;
-                margin-bottom: 6px;
-                opacity: 0.9;
-                font-family: 'Franklin Gothic Medium', 'Arial Narrow', Arial, sans-serif;
-                }
-
-                .vk-crypto-verified {
-                font-size: 10px;
-                // background-color: rgb(45, 226, 129);
-                color: rgb(255, 255, 255);
-                width: 1.4em;
-                height: 1.4em;
-                margin-left: 5px;
-                vertical-align: middle
-                }
-            `;
-            document.head.appendChild(style);
-
-            // ====== КНОПКА ======
-            const btn = document.createElement("button");
-            btn.id = "vk-crypto-page-button";
-            btn.className = "vk-crypto-mini-btn";
-            btn.innerText = "Crypto";
-
-            // ====== POPUP ======
-            const popup = document.createElement("div");
-            popup.className = "vk-crypto-popup";
-
-            popup.innerHTML = `
-                <div class="vk-crypto-popup-title">Chat ID: <span id="chat-id-text">—id-</span></div>
-
-                <div class="vk-crypto-popup-label">RSA-ключ:</div>
-                <input id="key-input" type="text" placeholder="Введите строку..." />
-
-                <div class="vk-crypto-popup-label" id="vk-crypto-no-key-error-label" style="color: red; font-size: 13px; display: none">Сейчас ключ не введен или он даже не похож на ключ. Чтобы отправлять защищенные сообщения, он необходим. Получите его у собеседника через надежный источник</div>
-
-                <button id="update-btn">Обновить ключ</button>
-            `;
-
-            ins_after.prepend(btn);
-            ins_after.prepend(popup);
-
-            const value = document.getElementById("key-input");
-            const chatIdNd = document.getElementById("chat-id-text");
-            const error_no_rsa_label = document.getElementById("vk-crypto-no-key-error-label");
-
-            let open = false;
-
-            btn.addEventListener("click", async () => {
-                open = !open;
-                popup.style.display = open ? "block" : "none";
-                popup.style.transform = open ? "translateY(50px)" : "translateY(0px)";
-
-                const chatId = parseInt(document.URL.substring(24));
-                chatIdNd.innerText = chatId;
-
-                const curKey = (await chrome.runtime.sendMessage({action: "get_someones_rsa_key", chatId: chatId})).result;
-                if (curKey == undefined) {
-                    error_no_rsa_label.style.display = "block";
-                } else if (curKey.length < 200) {
-                    error_no_rsa_label.style.display = "block";
-                    value.value = curKey;
-                } else {
-                    error_no_rsa_label.style.display = "none";
-                    value.value = curKey;
-                }
-            });
-
-            popup.querySelector("#update-btn").addEventListener("click", async () => {
-                const key = value.value;
-                const chatId = parseInt(document.URL.substring(24));
-                if (key.length < 200) {
-                    alert("Это не похоже на нужный ключ. Корректный состоит из примерно 350 печатаемых ASCII символов.");
-                    return;
-                }
-                await chrome.runtime.sendMessage({action: "set_someones_rsa_key", value: key, chatId: chatId});
-                error_no_rsa_label.style.display = "none";
-                value.value = key;
-            });
+async function add_stylesheet() {
+    const style = document.createElement("style");
+    style.id = "vk-crypto-stylesheet";
+    style.textContent = `
+        .vk-crypto-mini-btn {
+        // position: fixed;
+        //bottom: 20px;
+        //right: 20px;
+        z-index: 999999;
+        background: rgb(10, 10, 53);
+        color: rgb(255, 233, 188);
+        border: none;
+        padding: 10px 14px;
+        border-radius: 10px;
+        cursor: pointer;
+        font-size: 15px;
+        font-family: 'Franklin Gothic Medium', 'Arial Narrow', Arial, sans-serif;
         }
+
+        .vk-crypto-popup {
+        position: fixed;
+        transform: translateY(45px);
+        transition: transform 0.15s ease;
+        // bottom: 70px;
+        //right: 20px;
+        width: 260px;
+        background: rgb(22, 22, 120);
+        color: rgb(255, 233, 188);
+        padding: 12px;
+        border-radius: 12px;
+        z-index: 999999;
+        display: none;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.4);
+        }
+
+        .vk-crypto-popup input {
+        width: 100%;
+        margin-top: 6px;
+        margin-bottom: 10px;
+        padding: 8px;
+        border-radius: 8px;
+        border: none;
+        outline: none;
+        background: rgb(35, 35, 150);
+        color: rgb(255, 233, 188);
+        }
+
+        .vk-crypto-popup button {
+        width: 100%;
+        padding: 8px;
+        border: none;
+        border-radius: 8px;
+        cursor: pointer;
+        background: rgb(10, 10, 53);
+        color: rgb(255, 233, 188);
+        font-family: 'Franklin Gothic Medium', 'Arial Narrow', Arial, sans-serif;
+        }
+
+        .vk-crypto-popup-title {
+        font-size: 22px;
+        margin-bottom: 6px;
+        opacity: 0.9;
+        font-family: 'Franklin Gothic Medium', 'Arial Narrow', Arial, sans-serif;
+        }
+
+        .vk-crypto-popup-label {
+        font-size: 17px;
+        margin-bottom: 6px;
+        opacity: 0.9;
+        font-family: 'Franklin Gothic Medium', 'Arial Narrow', Arial, sans-serif;
+        }
+
+        .vk-crypto-verified {
+        font-size: 10px;
+        // background-color: rgb(45, 226, 129);
+        color: rgb(255, 255, 255);
+        width: 1.4em;
+        height: 1.4em;
+        margin-left: 5px;
+        vertical-align: middle
+        }
+
+        .vk-crypto-send-button {
+        font-size: 10px;
+        // background-color: rgb(45, 226, 129);
+        color: rgb(255, 255, 255);
+        width: 1.4em;
+        height: 1.4em;
+        margin-left: 5px;
+        margin-right: 5px;
+        vertical-align: middle
+        }
+    `;
+    document.head.appendChild(style);
+}
+
+async function add_crypto_page() {
+    let ins_after = document.getElementsByClassName("ConvoHeader__controls")[0];
+    if (ins_after != undefined) {
+        // ====== КНОПКА ======
+        const btn = document.createElement("button");
+        btn.id = "vk-crypto-page-button";
+        btn.className = "vk-crypto-mini-btn";
+        btn.innerText = "Crypto";
+
+        // ====== POPUP ======
+        const popup = document.createElement("div");
+        popup.className = "vk-crypto-popup";
+
+        popup.innerHTML = `
+            <div class="vk-crypto-popup-title">Chat ID: <span id="chat-id-text">—id-</span></div>
+
+            <div class="vk-crypto-popup-label">RSA-ключ:</div>
+            <input id="key-input" type="text" placeholder="Введите строку..." />
+
+            <div class="vk-crypto-popup-label" id="vk-crypto-no-key-error-label" style="color: red; font-size: 13px; display: none">Сейчас ключ не введен или он даже не похож на ключ. Чтобы отправлять защищенные сообщения, он необходим. Получите его у собеседника через надежный источник</div>
+
+            <button id="update-btn">Обновить ключ</button>
+        `;
+
+        ins_after.prepend(btn);
+        ins_after.prepend(popup);
+
+        const value = document.getElementById("key-input");
+        const chatIdNd = document.getElementById("chat-id-text");
+        const error_no_rsa_label = document.getElementById("vk-crypto-no-key-error-label");
+
+        let open = false;
+
+        btn.addEventListener("click", async () => {
+            open = !open;
+            popup.style.display = open ? "block" : "none";
+            popup.style.transform = open ? "translateY(50px)" : "translateY(0px)";
+
+            const chatId = getChatId();
+            chatIdNd.innerText = chatId;
+
+            const curKey = (await chrome.runtime.sendMessage({action: "get_someones_rsa_key", chatId: chatId})).result;
+            if (curKey == undefined) {
+                error_no_rsa_label.style.display = "block";
+            } else if (curKey.length < 200) {
+                error_no_rsa_label.style.display = "block";
+                value.value = curKey;
+            } else {
+                error_no_rsa_label.style.display = "none";
+                value.value = curKey;
+            }
+        });
+
+        popup.querySelector("#update-btn").addEventListener("click", async () => {
+            const key = value.value;
+            const chatId = getChatId();
+            if (key.length < 200) {
+                alert("Это не похоже на нужный ключ. Корректный состоит из примерно 350 печатаемых ASCII символов.");
+                return;
+            }
+            await chrome.runtime.sendMessage({action: "set_someones_rsa_key", value: key, chatId: chatId});
+            error_no_rsa_label.style.display = "none";
+            value.value = key;
+        });
     }
-    setTimeout(auto_add_crypto_page, 100);
+}
+
+async function add_send_encrypted_button() {
+    let all_bottom_buttons = document.getElementsByClassName("ConvoComposer__button");
+    let nd = all_bottom_buttons[all_bottom_buttons.length - 1];
+    if (nd != undefined) {
+        let btn = document.createElement("button");
+        btn.id = "vk-crypto-send-button";
+        btn.classList.add("ConvoComposer__button");
+        let img = document.createElement("img");
+        // img.classList.add("vk-crypto-send-button");
+        img.src = chrome.runtime.getURL("resources/send_button.png");
+        btn.onclick = send;
+        btn.title = "Отправить с шифрованием";
+        img.alt = "🔒";
+        img.style.width = img.style.height = "28px";
+        btn.appendChild(img);
+        nd.after(btn);
+    }
+}
+async function move_send_encrypted_button_to_right_place() {
+    let all_bottom_buttons = document.getElementsByClassName("ConvoComposer__button");
+    let btn = document.getElementById("vk-crypto-send-button");
+    let nd = all_bottom_buttons[all_bottom_buttons.length - 1];
+    if (btn != nd) {
+        nd.after(btn);
+    }
+}
+
+async function try_add_custom_things() {
+    if (document.getElementById("vk-crypto-stylesheet") == null) {
+        try {add_stylesheet();} catch (e) {console.log("Adding stylesheet failed: " + e.message);}
+    }
+    if (document.getElementById("vk-crypto-page-button") == null) {
+        try {add_crypto_page();} catch (e) {console.log("Adding crypto page failed: " + e.message);}
+    }
+    if (document.getElementById("vk-crypto-send-button") == null) {
+        try {add_send_encrypted_button();} catch (e) {console.log("Adding crypto send button failed: " + e.message);}
+    } else {
+        try {move_send_encrypted_button_to_right_place();} catch (e) {console.log("Moving crypto send button failed: " + e.message);}
+    }
+    setTimeout(try_add_custom_things, 10);
 }
 
 window.addEventListener("keydown", function (e) {
@@ -446,5 +509,5 @@ window.addEventListener("keydown", function (e) {
     }
 }, true);
 non_decrypted_watcher();
-setTimeout(auto_add_crypto_page, 100);
+setTimeout(try_add_custom_things, 10);
 console.log("loaded");

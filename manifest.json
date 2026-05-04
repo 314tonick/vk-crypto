@@ -3,16 +3,16 @@
     "name": "VK Crypto",
     "version": "0.0",
     "permissions": ["storage"],
-    "host_permissions": ["https://vk.com/*"],
+    "host_permissions": ["https://vk.com/*", "https://m.vk.com/*"],
     "content_scripts": [
         {
-            "matches": ["https://vk.com/*"],
+            "matches": ["https://vk.com/*", "https://m.vk.com/*"],
             "js": ["content.js"],
             "run_at": "document_end"
         }
     ],
     "action": {
-        "default_title": "Ejudge Lksh +",
+        "default_title": "VK Crypto",
         "default_popup": "popup.html"
     },
     "background": {
