@@ -1,7 +1,7 @@
 {
     "manifest_version": 3,
     "name": "VK Crypto",
-    "version": "0.0",
+    "version": "0.2",
     "permissions": ["storage"],
     "host_permissions": ["https://vk.com/*", "https://m.vk.com/*"],
     "content_scripts": [

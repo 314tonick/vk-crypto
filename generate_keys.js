@@ -19,14 +19,12 @@ async function generateKeys() {
         "pkcs8",
         rsaKey.privateKey
     ))).toBase64();
-    
-    console.log(exportedPub);
 
     await chrome.runtime.sendMessage({action: "set",
-        data: {publicRsaKey: exportedPub}
+        data: {publicRsaKey: [exportedPub]}
     });
     await chrome.runtime.sendMessage({action: "set",
-        data: {privateRsaKey: exportedPriv}
+        data: {privateRsaKey: [exportedPriv]}
     });
 
     // alert("Сгенерированы!");

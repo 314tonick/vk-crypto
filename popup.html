@@ -31,7 +31,7 @@
 </head>
 <body>
     <div style="font-size: 25px; font-weight: bold;"> VK Crypto </div>
-    <div style="font-size: 10px; font-weight: bold;"> Версия 0.0 </div>
+    <div style="font-size: 10px; font-weight: bold;" id="version_label"> Версия 0.0 </div>
     <div style="font-size: 15px;"><a target="_blank" href="https://www.youtube.com/watch?v=dQw4w9WgXcQ">by UNKNOWN</a></div>
     <hr>
     <label>
@@ -42,9 +42,13 @@
         Ваш текущий публичный RSA ключ:
         <br>
         <label id="pub_key_label" title="Его нужно знать всем, чтобы с Вами общаться.">123</label>
-        <button id="pub_key_button" title="Его нужно знать всем, чтобы с Вами общаться."">Скопировать</button>
+        <button id="pub_key_button" title="Его нужно знать всем, чтобы с Вами общаться.">Скопировать</button>
         <br>
         <button id="generate_keys_button">Перегенерировать!</button>
+    </div><br>
+    <div>
+        <button id="export_button">Выгрузить данные</button><br>
+        <button id="import_button">Загрузить данные</button>
     </div>
 
     <script src="popup.js"></script>

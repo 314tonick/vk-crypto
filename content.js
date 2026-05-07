@@ -123,55 +123,75 @@ async function encrypt(text, chat_id) {
     return packet;
 }
 async function decrypt(packet, chat_id) {
-    const sender_rsa_raw = (await chrome.runtime.sendMessage({action: "get_public_rsa_key"})).result;
-    const private_rsa_raw = (await chrome.runtime.sendMessage({action: "get_private_rsa_key"})).result;
-    const receiver_rsa_raw = (await chrome.runtime.sendMessage({action: "get_someones_rsa_key", chatId: chat_id})).result;
-    if (receiver_rsa_raw == undefined) {
+    const sender_rsa_raw_all = (await chrome.runtime.sendMessage({action: "get_public_rsa_key"})).all;
+    const private_rsa_raw_all = (await chrome.runtime.sendMessage({action: "get_private_rsa_key"})).all;
+    const receiver_rsa_raw_all = (await chrome.runtime.sendMessage({action: "get_someones_rsa_key", chatId: chat_id})).all;
+    if (!receiver_rsa_raw_all) {
         throw new Error("Unknown chatId: " + chat_id);
     }
-    const private_rsa = await crypto.subtle.importKey(
-        "pkcs8",
-        Uint8Array.fromBase64(private_rsa_raw),
-        {name: "RSA-OAEP", hash: "SHA-256"},
-        false,
-        ["decrypt"]
-    );
-    const sender_rsa_to_verify = await crypto.subtle.importKey(
-        "spki",
-        Uint8Array.fromBase64(sender_rsa_raw),
-        {name: "RSA-PSS", hash: "SHA-256"},
-        false,
-        ["verify"]
-    );
-    const receiver_rsa_to_verify = await crypto.subtle.importKey(
-        "spki",
-        Uint8Array.fromBase64(receiver_rsa_raw),
-        {name: "RSA-PSS", hash: "SHA-256"},
-        false,
-        ["verify"]
-    );
+    let rsa_priv_keys = [];
+    for (let i = 0; i < private_rsa_raw_all.length; ++i) {
+        try {
+           const private_rsa = await crypto.subtle.importKey(
+                "pkcs8",
+                Uint8Array.fromBase64(private_rsa_raw_all[i]),
+                {name: "RSA-OAEP", hash: "SHA-256"},
+                false,
+                ["decrypt"]
+            );
+            rsa_priv_keys.push(private_rsa);
+        } catch (error) {} // Wrong key, skipping.
+    }
+    let attempts = [];
+    for (let sender_rsa_raw of sender_rsa_raw_all) {
+        try {
+            const sender_rsa_to_verify = await crypto.subtle.importKey(
+                "spki",
+                Uint8Array.fromBase64(sender_rsa_raw),
+                {name: "RSA-PSS", hash: "SHA-256"},
+                false,
+                ["verify"]
+            );
+            attempts.push({rsaPssKey: sender_rsa_to_verify, encryptedAes: packet.key_sender, rsaOaepKeys: rsa_priv_keys});
+        } catch (error) {} // Wrong key, skipping.
+    }
+    for (let receiver_rsa_raw of receiver_rsa_raw_all) {
+        try {
+            const receiver_rsa_to_verify = await crypto.subtle.importKey(
+                "spki",
+                Uint8Array.fromBase64(receiver_rsa_raw),
+                {name: "RSA-PSS", hash: "SHA-256"},
+                false,
+                ["verify"]
+            );
+            attempts.push({rsaPssKey: receiver_rsa_to_verify, encryptedAes: packet.key_recipient, rsaOaepKeys: rsa_priv_keys});
+        } catch (error) {} // Wrong key, skipping
+    }
 
     let aes_key_raw = undefined;
 
-    const attempts = [
-        {rsaPssKey: sender_rsa_to_verify, encryptedAes: packet.key_sender, rsaOaepKey: private_rsa},
-        {rsaPssKey: receiver_rsa_to_verify, encryptedAes: packet.key_recipient, rsaOaepKey: private_rsa}
-    ]; // TODO: add support for multiple keys for users (in case of changing key)
     let packet_no_signature = structuredClone(packet);
     delete packet_no_signature.signature;
+    let hash_of_no_signature = new TextEncoder().encode(stableStringify(packet_no_signature));
     for (let attempt of attempts) {
         const verify_result = await crypto.subtle.verify(
             {name: "RSA-PSS", saltLength: 32},
             attempt.rsaPssKey,
             base64ToBuffer(packet.signature),
-            new TextEncoder().encode(stableStringify(packet_no_signature))
+            hash_of_no_signature
         );
         if (verify_result) {
-            aes_key_raw = await crypto.subtle.decrypt(
-                {name: "RSA-OAEP"},
-                attempt.rsaOaepKey,
-                base64ToBuffer(attempt.encryptedAes)
-            );
+            for (let rsaOaepKey of attempt.rsaOaepKeys) {
+                console.log("trying");
+                try {
+                    aes_key_raw = await crypto.subtle.decrypt(
+                        {name: "RSA-OAEP"},
+                        rsaOaepKey,
+                        base64ToBuffer(attempt.encryptedAes)
+                    );
+                    break;
+                } catch (error) {} // From priv key.
+            }
             break;
         }
     }
@@ -285,13 +305,14 @@ async function non_decrypted_watcher() {
                 check_mark_nd.title = "Сообщение было отправлено и расшифровано. Сертификат проверен.";
                 node.append(check_mark_nd);
             } catch (error) {
+                console.log(error);
                 node.title = error.message;
             }
         }
     } catch (e) {
         throw e;
     } finally {
-        setTimeout(non_decrypted_watcher, 100);
+        setTimeout(non_decrypted_watcher, 30);
     }
 }
 
@@ -427,7 +448,17 @@ async function add_crypto_page() {
         btn.addEventListener("click", async () => {
             open = !open;
             popup.style.display = open ? "block" : "none";
-            popup.style.transform = open ? "translateY(50px)" : "translateY(0px)";
+            // popup.style.transform = open ? "translateY(50px)" : "translateY(0px)";
+            popup.style.transform = "";
+            const rect = popup.getBoundingClientRect();
+            const overflowRight = rect.right - window.innerWidth;
+
+            if (overflowRight > 0) {
+                popup.style.transform = `translateX(-${overflowRight + 10}px) translateY(50px)`;
+            } else {
+                popup.style.transform = "translateY(50px)";
+            }
+
 
             const chatId = getChatId();
             chatIdNd.innerText = chatId;
