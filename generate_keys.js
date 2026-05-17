@@ -20,12 +20,13 @@ async function generateKeys() {
         rsaKey.privateKey
     ))).toBase64();
 
-    await chrome.runtime.sendMessage({action: "set",
-        data: {publicRsaKey: [exportedPub]}
-    });
-    await chrome.runtime.sendMessage({action: "set",
-        data: {privateRsaKey: [exportedPriv]}
-    });
+    // await chrome.runtime.sendMessage({action: "set",
+    //     data: {publicRsaKey: [exportedPub]}
+    // });
+    // await chrome.runtime.sendMessage({action: "set",
+    //     data: {privateRsaKey: [exportedPriv]}
+    // });
+    await chrome.runtime.sendMessage({action: "add_rsa_key", publicRsaKey: exportedPub, privateRsaKey: exportedPriv});
 
     // alert("Сгенерированы!");
 }

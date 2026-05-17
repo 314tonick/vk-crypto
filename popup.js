@@ -1,7 +1,6 @@
 const field1_checkbox = document.getElementById("field1_checkbox");
 
-chrome.runtime
-    .sendMessage({action: "get"})
+chrome.runtime.sendMessage({action: "get"})
     .then(response => {
         console.log(response);
         field1_checkbox.checked = response.field1;
@@ -24,9 +23,9 @@ version_label.textContent = "Версия " + chrome.runtime.getManifest().versi
 
 const export_button = document.getElementById("export_button");
 export_button.onclick = async () => {
-    if (!confirm("Вы уверены, что хотите выгрузить все данные? На текущий момент, ваш приватный ключ никак не зашифрован (это будет изменено в будущем обновлении).")) {
+    try {if (!confirm("Вы уверены, что хотите выгрузить все данные? На текущий момент, ваш приватный ключ никак не зашифрован (это будет изменено в будущем обновлении).")) {
         return;
-    }
+    }} catch(err) {}
     let data = await chrome.runtime.sendMessage({action: "get_all_data"});
     let blb = new Blob([JSON.stringify(data, null, 4)], {type: "text/plain"});
     let fake_link = document.createElement("a");
@@ -49,16 +48,16 @@ import_button.onclick = async () => {
         reader.onload = async () => {
             let data_string = reader.result;
             fake_input.remove();
-            if (!confirm("Вы уверены что хотите загрузить новые данные? Старые данные будут удалены (merge будет добавлен скоро). Это действие нельзя отменить.")) {
-                return;
-            }
+            try {
+            if (!confirm("Вы уверены что хотите загрузить новые данные? Старые данные будут удалены (merge будет добавлен скоро). Это действие нельзя отменить.")) {return;}
+            } catch(e) {} // This means someone has blocked these windows or uses chromoy browser.
             try {
                 let data_object = JSON.parse(data_string);
                 await chrome.runtime.sendMessage({action: "set_all_data", data: data_object});
-                alert("Данные успешно загружены.");
+                try {alert("Данные успешно загружены.")} catch(err) {}
                 location.reload();
             } catch (err) {
-                alert("Ошибка. Формат сейва нарушен.");
+                try {alert("Ошибка. Формат сейва нарушен.")} catch(err) {}
             }
         };
         reader.readAsText(file);
@@ -67,8 +66,7 @@ import_button.onclick = async () => {
 }
 
 
-chrome.runtime
-    .sendMessage({action: "get_public_rsa_key"})
+chrome.runtime.sendMessage({action: "get_public_rsa_key"})
     .then(response => {
         console.log("Received: ", response);
         if (response["result"] == undefined) {

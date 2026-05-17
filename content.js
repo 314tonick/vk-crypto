@@ -155,6 +155,7 @@ async function decrypt(packet, chat_id) {
             attempts.push({rsaPssKey: sender_rsa_to_verify, encryptedAes: packet.key_sender, rsaOaepKeys: rsa_priv_keys});
         } catch (error) {} // Wrong key, skipping.
     }
+    console.log(attempts);
     for (let receiver_rsa_raw of receiver_rsa_raw_all) {
         try {
             const receiver_rsa_to_verify = await crypto.subtle.importKey(
@@ -342,7 +343,7 @@ async function add_stylesheet() {
         // bottom: 70px;
         //right: 20px;
         width: 260px;
-        background: rgb(22, 22, 120);
+        background: rgb(22, 22, 70);
         color: rgb(255, 233, 188);
         padding: 12px;
         border-radius: 12px;
@@ -359,7 +360,7 @@ async function add_stylesheet() {
         border-radius: 8px;
         border: none;
         outline: none;
-        background: rgb(35, 35, 150);
+        background: rgb(35, 35, 100);
         color: rgb(255, 233, 188);
         }
 
@@ -482,7 +483,7 @@ async function add_crypto_page() {
                 alert("Это не похоже на нужный ключ. Корректный состоит из примерно 350 печатаемых ASCII символов.");
                 return;
             }
-            await chrome.runtime.sendMessage({action: "set_someones_rsa_key", value: key, chatId: chatId});
+            await chrome.runtime.sendMessage({action: "add_someones_rsa_key", value: key, chatId: chatId});
             error_no_rsa_label.style.display = "none";
             value.value = key;
         });

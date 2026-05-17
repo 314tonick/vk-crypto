@@ -4,6 +4,9 @@
     "version": "0.2",
     "permissions": ["storage"],
     "host_permissions": ["https://vk.com/*", "https://m.vk.com/*"],
+    "icons": {
+        "128": "resources/logo.png"
+    },
     "content_scripts": [
         {
             "matches": ["https://vk.com/*", "https://m.vk.com/*"],
@@ -15,6 +18,7 @@
         "default_title": "VK Crypto",
         "default_popup": "popup.html"
     },
+    "options_page": "keys_page.html",
     "background": {
         "service_worker": "service.js"
     },
