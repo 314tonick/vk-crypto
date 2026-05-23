@@ -1,20 +1,45 @@
-const field1_checkbox = document.getElementById("field1_checkbox");
+const popupDialogs_checkbox = document.getElementById("popupDialogs_checkbox");
 
-chrome.runtime.sendMessage({action: "get"})
+let showDialogs = false;
+chrome.runtime.sendMessage({action: "get_settings"})
     .then(response => {
         console.log(response);
-        field1_checkbox.checked = response.field1;
+        showDialogs = response.popupDialogs;
+        popupDialogs_checkbox.checked = response.popupDialogs;
     },
 );
 
-field1_checkbox.onchange = () => {
+popupDialogs_checkbox.onchange = () => {
     chrome.runtime.sendMessage({action: "set",
-        data: {field1: field1_checkbox.checked}
+        data: {popupDialogs: popupDialogs_checkbox.checked}
     });
-    console.log("something");
+    console.log("changed setting");
+    showDialogs = popupDialogs_checkbox.checked;
     chrome.tabs.query({active: true, currentWindow: true}, function(tabs) {
     chrome.tabs.update(tabs[0].id, {url: tabs[0].url});
 })};
+
+function alert_there(msg) {
+    try {if (showDialogs) {
+        alert_there(msg);
+    }} catch(err) {}
+}
+
+function prompt_there(msg, dflt) {
+    if (showDialogs) {
+        try {return prompt(msg, dflt);} catch(err) {return "";}
+    }
+    console.log("Error. Need some text but dialogs are turned off.");
+    return "";
+}
+
+function confirm_there(msg) {
+    console.log("confirm?", showDialogs);
+    if (showDialogs) {
+        try {return confirm(msg);} catch(err) {return true;}
+    }
+    return true;
+}
 
 const pub_key_label = document.getElementById("pub_key_label");
 const pub_key_button = document.getElementById("pub_key_button");
@@ -23,9 +48,9 @@ version_label.textContent = "Версия " + chrome.runtime.getManifest().versi
 
 const export_button = document.getElementById("export_button");
 export_button.onclick = async () => {
-    try {if (!confirm("Вы уверены, что хотите выгрузить все данные? На текущий момент, ваш приватный ключ никак не зашифрован (это будет изменено в будущем обновлении).")) {
+    if (!confirm_there("Вы уверены, что хотите выгрузить все данные? На текущий момент, ваш приватный ключ никак не зашифрован (это будет изменено в будущем обновлении).")) {
         return;
-    }} catch(err) {}
+    }
     let data = await chrome.runtime.sendMessage({action: "get_all_data"});
     let blb = new Blob([JSON.stringify(data, null, 4)], {type: "text/plain"});
     let fake_link = document.createElement("a");
@@ -48,16 +73,14 @@ import_button.onclick = async () => {
         reader.onload = async () => {
             let data_string = reader.result;
             fake_input.remove();
-            try {
-            if (!confirm("Вы уверены что хотите загрузить новые данные? Старые данные будут удалены (merge будет добавлен скоро). Это действие нельзя отменить.")) {return;}
-            } catch(e) {} // This means someone has blocked these windows or uses chromoy browser.
+            if (!confirm_there("Вы уверены что хотите загрузить новые данные? Старые данные будут удалены (merge будет добавлен скоро). Это действие нельзя отменить.")) {return;}
             try {
                 let data_object = JSON.parse(data_string);
                 await chrome.runtime.sendMessage({action: "set_all_data", data: data_object});
-                try {alert("Данные успешно загружены.")} catch(err) {}
+                alert_there("Данные успешно загружены.");
                 location.reload();
             } catch (err) {
-                try {alert("Ошибка. Формат сейва нарушен.")} catch(err) {}
+                alert_there("Ошибка. Формат сейва нарушен.");
             }
         };
         reader.readAsText(file);

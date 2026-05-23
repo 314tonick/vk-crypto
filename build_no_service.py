@@ -53,5 +53,5 @@ if os.name == "nt":
 else:
     os.system("cd build && zip ../vk-crypto-serviceless.zip * && cd ..")
 print("Removing build folder...")
-# shutil.rmtree("build")
+shutil.rmtree("build")
 print("Done. File vk-crypto-serviceless.zip generated.")

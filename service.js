@@ -2,14 +2,14 @@
 // publicRsaKey: string
 // privateRsaKey: string
 // pubRsa_<any_user_id>: string
-// field1: boolean
+// popupDialogs: boolean
 
 // Storage 0.2:
 // storageVersion: 0.2
 // publicRsaKey: Array[string]
 // privateRsaKey: Array[string]
 // pubRsa_<any_user_id>: Array[string]
-// field1: boolean
+// popupDialogs: boolean
 
 async function getKeyArray(key) {
     const result = await chrome.storage.local.get(key);
@@ -89,8 +89,8 @@ async function serviceMessage(request) {
         case "add_rsa_key": {
             let pubKeys = await chrome.storage.local.get("publicRsaKey");
             let privKeys = await chrome.storage.local.get("privateRsaKey");
-            pubKeys = pubKeys.publicRsaKey;
-            privKeys = privKeys.privateRsaKey;
+            pubKeys = (pubKeys == undefined || pubKeys.publicRsaKey == undefined) ? [] : pubKeys.publicRsaKey;
+            privKeys = (privKeys == undefined || privKeys.privateRsaKey == undefined) ? [] : privKeys.privateRsaKey;
             if (privKeys.length != pubKeys.length) {
                 throw new Error(
                     "Number of public keys and private are different. What the hell???"
@@ -114,8 +114,8 @@ async function serviceMessage(request) {
             });
             return true;
         }
-        case "get":
-            return await chrome.storage.local.get({field1: true});
+        case "get_settings":
+            return await chrome.storage.local.get({popupDialogs: true});
         case "set":
             await chrome.storage.local.set(request.data);
             return true;
