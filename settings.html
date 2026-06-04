@@ -2,14 +2,14 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <title>VK Crypto</title>
+    <title>VK Crypto Settings</title>
     <style>
         body {
             width: max-content;
             height: max-content;
             padding: 3px;
             font-size: 20px;
-            background-color: rgb(22, 22, 80);
+            background-color: rgb(22, 22, 60);
             font-family: 'Franklin Gothic Medium', 'Arial Narrow', Arial, sans-serif;
         }
 
@@ -27,17 +27,29 @@
             color: rgb(255, 233, 188);
             background-color: rgb(10, 10, 53);
         }
+
+        a:link {
+            color: rgb(79, 79, 196);
+        }
+
+        a:visited {
+            color: rgb(147, 79, 196)
+        }
     </style>
 </head>
 <body>
-    <div style="font-size: 25px; font-weight: bold;"> VK Crypto Settings </div>
+    <div style="font-size: 25px; font-weight: bold;"> VK Crypto Settings ⚙️ </div>
     <div style="font-size: 10px; font-weight: bold;" id="version_label"> Версия 0.0 </div>
     <div style="font-size: 15px;"><a target="_blank" href="https://www.youtube.com/watch?v=dQw4w9WgXcQ">by UNKNOWN</a></div>
+    <!-- <label>
+        СТРАНИЦА НАСТРОЕК ⚙️
+    </label> -->
     <hr>
     <label>
-        IN WORK ⚙️
-    </label><br>
-    <!-- <div>
+        Диалоги во всплывающем окне?
+        <input id="popupDialogs_checkbox" type="checkbox">
+    </label><hr>
+    <div>
         Ваш текущий публичный RSA ключ:
         <br>
         <label id="pub_key_label" title="Его нужно знать всем, чтобы с Вами общаться.">123</label>
@@ -46,11 +58,11 @@
         <button id="generate_keys_button">Перегенерировать!</button>
     </div><hr>
     <div>
-        <button id="export_button">Выгрузить данные</button><br>
-        <button id="import_button">Загрузить данные</button>
+        <a href="settings-import-export.html">Выгрузка / загрузка данных</a>
     </div>
 
-    <script src="popup.js"></script>
-    <script src="generate_keys.js"></script> -->
+    <script src="settings.js"></script>
+    <script src="generate_keys.js"></script>
+
 </body>
 </html>

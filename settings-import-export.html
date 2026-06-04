@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>VK Crypto Settings / Импорт-Экспорт</title>
+    <style>
+        body {
+            width: max-content;
+            height: max-content;
+            padding: 8px;
+            font-size: 20px;
+            background-color: rgb(22, 22, 60);
+            font-family: 'Franklin Gothic Medium', 'Arial Narrow', Arial, sans-serif;
+        }
+
+        textarea {
+            width: 90%;
+            box-sizing: border-box;
+        }
+
+        div, span {
+            color: rgb(255, 233, 188);
+            font-size: 15px;
+            font-weight: bold;
+        }
+
+        button {
+            font-family: 'Franklin Gothic Medium', 'Arial Narrow', Arial, sans-serif;
+            color: rgb(255, 233, 188);
+            font-size: 18px;
+            background-color: rgb(30, 30, 93);
+        }
+
+        /* button:hover {
+            background-color: rgb(25, 25, 90);
+        } */
+
+        a:link {
+            color: rgb(99, 99, 216);
+        }
+
+        a:visited {
+            color: rgb(167, 99, 216)
+        }
+
+        .section-main {
+            padding: 10px;
+        }
+
+        .section-all {
+            display: flex;
+            align-items: stretch;
+            /* border: 1px solid rgb(50, 50, 120); */
+            border-radius: 10px;
+            margin-bottom: 10px;
+        }
+
+        .section-image {
+            /* aspect-ratio: 1/1; */
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 7vh;
+        }
+
+        .large {
+            font-size: 20px;
+        }
+
+        .small {
+            font-size: 10px;
+        }
+
+        input {
+            background: rgb(35, 35, 100);
+            color: rgb(255, 233, 188);
+            outline: none;
+            border: none;
+            margin-bottom: 5px;
+            margin-top: 5px;
+        }
+
+        input:focus {
+            box-shadow: 0 0 5px rgb(80, 80, 235);
+        }
+
+    </style>
+</head>
+<body>
+    <div>
+        <a href="settings.html">VK Crypto Settings ⚙️</a>
+    </div>
+    <span style="font-size: 25px;"> ИМПОРТ / ЭКСПОРТ </span>
+    <hr>
+    <div class="section-all">
+        <div class="section-image">⬇</div>
+        <div class="section-main">
+            <span class="large">Выгрузка данных в файл</span><br>
+            <span class="small">Если хотите перенести ключи на другое устройство или обновить расширение.</span><br>
+            Пароль:  <input type="password" placeholder="Если хотите передать на другое устройство" id="export_password"><br>
+            <button id="export_button">Выгрузить данные</button><br>
+        </div>
+    </div>
+    <hr>
+    <div class="section-all">
+        <div class="section-image">⬆</div>
+        <div class="section-main" style="line-height: 120%;">
+            <span class="large">Загрузка данных из файла</span><br>
+            <span class="small">Чтобы загрузить данные из файла например с другого устройства.</span><br>
+            Пароль:  <input type="password" placeholder="Если использовали его" id="import_password"><br>
+            <!-- Файл:  <input type="file" accept=".json" id="file-to-import"><br> -->
+            <button id="import_button">Выбрать файл и загрузить данные</button>
+        </div>
+    </div>
+    <hr>
+    <div>
+        <a class="large" href="settings.html">← Вернуться на главную страницу настроек</a>
+    </div>
+
+    <script src="settings-import-export.js"></script>
+
+</body>
+</html>

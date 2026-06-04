@@ -18,7 +18,7 @@
         "default_title": "VK Crypto",
         "default_popup": "popup.html"
     },
-    "options_page": "keys_page.html",
+    "options_page": "settings.html",
     "background": {
         "service_worker": "service.js"
     },

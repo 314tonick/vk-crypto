@@ -362,6 +362,7 @@ async function add_stylesheet() {
         outline: none;
         background: rgb(35, 35, 100);
         color: rgb(255, 233, 188);
+        font-family: sans-serif;
         }
 
         .vk-crypto-popup button {
@@ -387,6 +388,13 @@ async function add_stylesheet() {
         margin-bottom: 6px;
         opacity: 0.9;
         font-family: 'Franklin Gothic Medium', 'Arial Narrow', Arial, sans-serif;
+        }
+
+        .vk-crypto-popup-text {
+        font-size: 15px;
+        margin-bottom: 6px;
+        opacity: 0.9;
+        font-family: sans-serif;
         }
 
         .vk-crypto-verified {
@@ -431,6 +439,8 @@ async function add_crypto_page() {
 
             <div class="vk-crypto-popup-label">RSA-ключ:</div>
             <input id="key-input" type="text" placeholder="Введите строку..." />
+            <div id="key-visualize-title" class="vk-crypto-popup-label">Визуализация:</div>
+            <div id="key-visualize" class="vk-crypto-popup-text" title="Часть ключа для визуального сравнения">XYZ</div>
 
             <div class="vk-crypto-popup-label" id="vk-crypto-no-key-error-label" style="color: red; font-size: 13px; display: none">Сейчас ключ не введен или он даже не похож на ключ. Чтобы отправлять защищенные сообщения, он необходим. Получите его у собеседника через надежный источник</div>
 
@@ -443,6 +453,8 @@ async function add_crypto_page() {
         const value = document.getElementById("key-input");
         const chatIdNd = document.getElementById("chat-id-text");
         const error_no_rsa_label = document.getElementById("vk-crypto-no-key-error-label");
+        const visualize = document.getElementById("key-visualize");
+        const visualize_title = document.getElementById("key-visualize-title");
 
         let open = false;
 
@@ -467,12 +479,19 @@ async function add_crypto_page() {
             const curKey = (await chrome.runtime.sendMessage({action: "get_someones_rsa_key", chatId: chatId})).result;
             if (curKey == undefined) {
                 error_no_rsa_label.style.display = "block";
+                visualize.style.display = "none";
+                visualize_title.style.display = "none";
             } else if (curKey.length < 200) {
                 error_no_rsa_label.style.display = "block";
+                visualize.style.display = "none";
+                visualize_title.style.display = "none";
                 value.value = curKey;
             } else {
                 error_no_rsa_label.style.display = "none";
+                visualize.style.display = "block";
+                visualize_title.style.display = "block";
                 value.value = curKey;
+                visualize.textContent = "..." + curKey.substring(50, 70) + "...";
             }
         });
 
@@ -486,6 +505,7 @@ async function add_crypto_page() {
             await chrome.runtime.sendMessage({action: "add_someones_rsa_key", value: key, chatId: chatId});
             error_no_rsa_label.style.display = "none";
             value.value = key;
+            visualize.textContent = "..." + key.substring(50, 70) + "...";
         });
     }
 }

@@ -9,7 +9,7 @@
             height: max-content;
             padding: 3px;
             font-size: 20px;
-            background-color: rgb(22, 22, 70);
+            background-color: rgb(22, 22, 60);
             font-family: 'Franklin Gothic Medium', 'Arial Narrow', Arial, sans-serif;
         }
 
@@ -27,10 +27,22 @@
             color: rgb(255, 233, 188);
             background-color: rgb(10, 10, 53);
         }
+
+        a:link {
+            color: rgb(79, 79, 196);
+        }
+
+        a:visited {
+            color: rgb(147, 79, 196)
+        }
+
     </style>
 </head>
 <body>
-    <div style="font-size: 25px; font-weight: bold;"> VK Crypto </div>
+    <div style="font-size: 25px; font-weight: bold;">
+        VK Crypto
+        <a href="settings.html" target="_blank" style="text-decoration: none;">⚙️</a>
+    </div>
     <div style="font-size: 10px; font-weight: bold;" id="version_label"> Версия 0.0 </div>
     <div style="font-size: 15px;"><a target="_blank" href="https://www.youtube.com/watch?v=dQw4w9WgXcQ">by UNKNOWN</a></div>
     <hr>
@@ -44,12 +56,12 @@
         <label id="pub_key_label" title="Его нужно знать всем, чтобы с Вами общаться.">123</label>
         <button id="pub_key_button" title="Его нужно знать всем, чтобы с Вами общаться.">Скопировать</button>
         <br>
-        <button id="generate_keys_button">Перегенерировать!</button>
+        <!-- <button id="generate_keys_button">Перегенерировать!</button> -->
     </div><hr>
-    <div>
+    <!-- <div>
         <button id="export_button">Выгрузить данные</button><br>
         <button id="import_button">Загрузить данные</button>
-    </div>
+    </div> -->
 
     <script src="popup.js"></script>
     <script src="generate_keys.js"></script>
